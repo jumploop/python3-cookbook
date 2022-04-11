@@ -43,7 +43,7 @@ def named_tuple(classname, fieldnames):
     # Make a __new__ function and add to the class dict
     def __new__(cls, *args):
         if len(args) != len(fieldnames):
-            raise TypeError('Expected {} arguments'.format(len(fieldnames)))
+            raise TypeError(f'Expected {len(fieldnames)} arguments')
         return tuple.__new__(cls, args)
 
     cls_dict['__new__'] = __new__
