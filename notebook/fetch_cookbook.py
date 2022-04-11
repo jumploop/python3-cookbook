@@ -74,10 +74,13 @@ class Chapter:
         soup = BeautifulSoup(content, 'html.parser')
         self.chapter_title = soup.find('h1').text.replace('¶', '')
         self.chapter_desc = soup.find('p').text
-        self.sections = []
-        for x in soup.find_all('a', class_='reference internal', href=re.compile('/p\d+_')):
-            if x['href'] not in self.sections:
-                self.sections.append(x['href'])
+        self.sections = [
+            x['href']
+            for x in soup.find_all(
+                'a', class_='reference internal', href=re.compile('/p\d+_')
+            )
+            if x['href'] not in self.sections
+        ]
 
     def fetch_sections(self, sep=False):
         cells = [{
@@ -94,10 +97,15 @@ class Chapter:
                 _dpath.mkdir(exist_ok=True)
                 TEMPLATE['cells'] = _cells
                 *_, section_name = href.split('/')
-                open(str(_dpath / '{}.ipynb'.format(section_name.split('.')[0])), 'w').write(json.dumps(TEMPLATE, indent=2))
+                open(
+                    str(_dpath / f"{section_name.split('.')[0]}.ipynb"), 'w'
+                ).write(json.dumps(TEMPLATE, indent=2))
+
             cells.extend(_cells)
         TEMPLATE['cells'] = cells
-        open(str(dpath / '{}.ipynb'.format(self.chapter_title)), 'w').write(json.dumps(TEMPLATE, indent=2))
+        open(str(dpath / f'{self.chapter_title}.ipynb'), 'w').write(
+            json.dumps(TEMPLATE, indent=2)
+        )
 
     def fetch_content(self, url):
         content = self.fetch(url)
@@ -121,7 +129,12 @@ class Chapter:
             if p_header.search(tag.name):
                 cell = deepcopy(cell_markdown)
                 cell['source'].append(
-                    '{} {}\n'.format('#' * (int(p_header.search(tag.name).group('level')) + 1), tag.text))
+                    '{} {}\n'.format(
+                        '#' * (int(p_header.search(tag.name)['level']) + 1),
+                        tag.text,
+                    )
+                )
+
                 cells.append(cell)
             elif tag.name == 'p':
                 if 'Copyright' in tag.text:
@@ -141,14 +154,11 @@ class Chapter:
                             if re.search('^(>|\.){3}\s*$', line):
                                 continue
                             source.append(re.sub('^(>|\.){3} ', '', line))
-                        else:
-                            if source:
-                                cell = deepcopy(cell_code)
-                                cell['source'].append(re.sub('(^\n*|\n*$)', '', '\n'.join(source)))
-                                cells.append(cell)
-                                source = []
-                            else:
-                                continue
+                        elif source:
+                            cell = deepcopy(cell_code)
+                            cell['source'].append(re.sub('(^\n*|\n*$)', '', '\n'.join(source)))
+                            cells.append(cell)
+                            source = []
                 if source:
                     cell = deepcopy(cell_code)
                     cell['source'].append('\n'.join(source))

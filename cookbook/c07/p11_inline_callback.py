@@ -34,7 +34,7 @@ def inlined_async(func):
             print('2' * 15)
             try:
                 print('3' * 15)
-                print('result={}'.format(result))
+                print(f'result={result}')
                 a = f.send(result)
                 print('4' * 15)
                 apply_async(a.func, a.args, callback=result_queue.put)
@@ -53,9 +53,9 @@ def add(x, y):
 def test():
     print('start'.center(20, '='))
     r = yield Async(add, (2, 3))
-    print('last={}'.format(r))
+    print(f'last={r}')
     r = yield Async(add, ('hello', 'world'))
-    print('last={}'.format(r))
+    print(f'last={r}')
     # for n in range(10):
     # r = yield Async(add, (n, n))
     # print(r)
